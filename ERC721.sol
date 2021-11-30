@@ -3,7 +3,7 @@ pragma ton-solidity >=0.43.0;
 pragma AbiHeader expire;
 pragma AbiHeader time;
 
-import "./IERC721.sol";
+import "./interfaces/IERC721.sol";
 
 contract ERC721 is IERC721 {
 
@@ -49,14 +49,14 @@ contract ERC721 is IERC721 {
     }
 
     function approve(address to, uint256 tokenId) public override {
-        address owner = ERC721.ownerOf(tokenId);
+        address owner = ownerOf(tokenId);
         require(owner != to);
-        require(msg.sender == owner || ERC721.isApprovedForAll(owner, msg.sender));
+        require(msg.sender == owner || isApprovedForAll(owner, msg.sender));
         _approve(to, tokenId);
     }
 
     function getApproved(uint256 tokenId) public view override returns(address) {
-        require(ERC721._exists(tokenId));
+        require(_exists(tokenId));
         return _tokenApprovals[tokenId];
     }
 
@@ -72,7 +72,7 @@ contract ERC721 is IERC721 {
     }
 
     function transferFrom(address from, address to, uint256 tokenId) public override {
-        require(ERC721._isApprovedOrOwner(msg.sender, tokenId));
+        require(_isApprovedOrOwner(msg.sender, tokenId));
         _transfer(from, to, tokenId);
     }
 
@@ -80,7 +80,7 @@ contract ERC721 is IERC721 {
 
     
 
-    //private function
+    //internal function
 
     function _approve(address to, uint256 tokenId) internal {
         _tokenApprovals[tokenId] = to;
@@ -102,6 +102,8 @@ contract ERC721 is IERC721 {
         require(!address(to).isStdZero());
         _approve(address(0), tokenId);
 
+        _beforeTokenTransfer(from, to, tokenId);
+
         _balances[from] -= 1;
         _balances[to] += 1;
         _owners[tokenId] = to;
@@ -116,7 +118,13 @@ contract ERC721 is IERC721 {
         _balances[to] +=1;
         _owners[tokenId] = to;
 
+        _beforeTokenTransfer(address(0), to, tokenId);
+
         emit Transfer(address(0), to, tokenId);
+    }
+
+    function _beforeTokenTransfer(address from, address to, uint256 tokenId) internal virtual {
+
     }
 
 
